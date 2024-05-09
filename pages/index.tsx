@@ -1,62 +1,24 @@
-import Image from "next/image";
 import { Inter } from "next/font/google";
-import { ObjectId } from "mongodb";
-import clientPromise from "../lib/mongodb";
 import { GetStaticProps } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
 
-interface Movie {
-  _id: ObjectId;
-  title: string;
-  metacritic: number;
-  plot: string;
-}
+const Home = ({ data }: any) => {
+  return <div>{JSON.stringify(data)}</div>;
+};
 
-interface TopProps {
-  movies: Movie[];
-}
-
-export default function Home({ movies }: TopProps) {
-  return (
-    <div>
-      <h1>Top 1000 Movies of All Time</h1>
-      <p>
-        <small>(According to Metacritic)</small>
-      </p>
-      <ul>
-        {movies.map((movie) => (
-          <li key={movie._id.toString()}>
-            <h2>{movie.title}</h2>
-            <h3>{movie.metacritic}</h3>
-            <p>{movie.plot}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-export const getStaticProps: GetStaticProps<TopProps> = async () => {
+export const getStaticProps: GetStaticProps<any> = async () => {
   try {
-    const client = await clientPromise;
-
-    const db = client.db("sample_mflix");
-
-    const movies = await db
-      .collection("movies")
-      .find({})
-      .sort({ metacritic: -1 })
-      .limit(1000)
-      .toArray();
-
+    const data = await fetch("/api/user");
     return {
-      props: { movies: JSON.parse(JSON.stringify(movies)) },
+      props: { data: JSON.parse(JSON.stringify(data)) },
     };
   } catch (e) {
     console.error(e);
     return {
-      props: { movies: [] },
+      props: { data: [] },
     };
   }
 };
+
+export default Home;
