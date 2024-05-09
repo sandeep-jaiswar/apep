@@ -14,51 +14,54 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           const data = await db
             .collection("users")
             .findOne({ _id: new ObjectId(slug?.toString()) });
+          if (!data) {
+            return res
+              .status(404)
+              .send({ success: false, error: "User not found" });
+          }
           return res.status(200).send({ success: true, data });
         } catch (error) {
           return res
             .status(500)
-            .send({ success: false, message: "user does not exists." });
-        } finally {
-          break;
+            .send({ success: false, message: "Error while fetching user data" });
         }
 
       case "PATCH":
         try {
-          const existingdata = await db
+          const existingData = await db
             .collection("users")
             .findOne({ _id: new ObjectId(slug?.toString()) });
-          if (!existingdata) {
+          if (!existingData) {
             return res
-              .status(400)
-              .json({ success: false, error: "user does not exists" });
+              .status(404)
+              .json({ success: false, error: "User not found" });
           }
-          const updatedData = { ...existingdata, ...req.body };
-          const data = await db
+          const updatedData = { ...existingData, ...req.body };
+          const result = await db
             .collection("users")
             .updateOne(
               { _id: new ObjectId(slug?.toString()) },
               { $set: updatedData }
             );
-          return res.status(201).send({ success: true, data });
+          if (result.modifiedCount === 0) {
+            return res.status(400).json({ success: false, error: "No changes detected" });
+          }
+          return res.status(200).send({ success: true, data: updatedData });
         } catch (error) {
           return res
             .status(500)
-            .send({ success: false, message: "Error while creating users" });
-        } finally {
-          break;
+            .send({ success: false, message: "Error while updating user" });
         }
 
       default:
         return res
           .status(405)
           .send({ success: false, message: "Method is not supported" });
-        break;
     }
   } catch (error) {
     return res.status(500).send({
       success: false,
-      message: error,
+      message: "Internal Server Error",
     });
   }
 };

@@ -20,47 +20,38 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         } catch (error) {
           return res
             .status(500)
-            .send({ success: false, message: "Error while fetching users" });
-        } finally {
-          break;
+            .send({ success: false, message: "Error while fetching user data" });
         }
 
       case "POST":
         try {
           const user = new userModel(req.body);
-          const existingdata = await db.collection("users").findOne({
-            $where: function () {
-              return this.email === user.email;
-            },
-          });
-          if (existingdata) {
+          const existingData = await db.collection("users").findOne({ $where: function () {
+            return this.email === user.email;
+          } });
+          if (existingData) {
             return res
               .status(400)
-              .json({ success: false, error: "Email address already exists." });
+              .json({ success: false, error: "Email address already exists" });
           }
-          await db
-            .collection("users")
-            .createIndex({ email: 1 }, { unique: true });
-          const data = await db.collection("users").insertOne(user);
-          return res.status(201).send({ success: true, data });
+          await db.collection("users").createIndex({ email: 1 }, { unique: true });
+          const result = await db.collection("users").insertOne(user);
+          return res.status(201).send({ success: true, data: result });
         } catch (error) {
           return res
             .status(500)
-            .send({ success: false, message: "Error while creating users" });
-        } finally {
-          break;
+            .send({ success: false, message: "Error while creating user" });
         }
 
       default:
         return res
           .status(405)
-          .send({ success: false, message: "Method is not supported" });
-        break;
+          .send({ success: false, message: "Method not supported" });
     }
   } catch (error) {
     return res.status(500).send({
       success: false,
-      message: error,
+      message: "Internal Server Error",
     });
   }
 };
